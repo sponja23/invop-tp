@@ -27,6 +27,30 @@ files = [
 six = "*"
 
 [[package]]
+name = "recordclass"
+version = "0.21.1"
+description = "Mutable variant of namedtuple -- recordclass, which support assignments, compact dataclasses and other memory saving variants."
+optional = false
+python-versions = "*"
+files = [
+    {file = "recordclass-0.21.1-cp310-cp310-win32.whl", hash = "sha256:cb75c1362eb1f7e1197d61eed23890ec0dd06b5e19497253cf23e145e847a660"},
+    {file = "recordclass-0.21.1-cp310-cp310-win_amd64.whl", hash = "sha256:287f782825f2a2b9289fa7aafbfad515d5569014886d8fb43fd613beaee98ccd"},
+    {file = "recordclass-0.21.1-cp311-cp311-win32.whl", hash = "sha256:7871299a434ee1961e015e4913076eeab9a064dd6d8ba8e45f44256a095f86a8"},
+    {file = "recordclass-0.21.1-cp311-cp311-win_amd64.whl", hash = "sha256:9b21d1ca6f7f1c2fb1ec3bf022a2c7d5bfb51bc1a31be83626e8a8dbd96a2618"},
+    {file = "recordclass-0.21.1-cp312-cp312-win32.whl", hash = "sha256:f03e49315cd313c74ca10cd378788530ad7b540ba10267c58c16a67ea9c0dcba"},
+    {file = "recordclass-0.21.1-cp312-cp312-win_amd64.whl", hash = "sha256:7f79df45362675ba7ea0cecf4d76678bab8529a6ca6137fd0b167fe6b0e30cb2"},
+    {file = "recordclass-0.21.1-cp36-cp36m-win32.whl", hash = "sha256:04455419c10a51daf5b62207f3eb05a97afc34bff5808ca925b9831688fcac4b"},
+    {file = "recordclass-0.21.1-cp36-cp36m-win_amd64.whl", hash = "sha256:737099dd4ce3c299b625cbe88c36f62387feb2218cb49a0b868eaaec7609ddfb"},
+    {file = "recordclass-0.21.1-cp37-cp37m-win32.whl", hash = "sha256:7d537aff7ed28a6d1d06616a1c85bd02e4d723bb06ca50bd239c000b19821951"},
+    {file = "recordclass-0.21.1-cp37-cp37m-win_amd64.whl", hash = "sha256:7a55e010192296ca6a7d37a624ff5437e80cddf965c33a10ca9cf14a80ea16af"},
+    {file = "recordclass-0.21.1-cp38-cp38-win32.whl", hash = "sha256:e2cc799e1761e72d590a9d790d47973da01a1f1b559079a10e7293b6ffadea37"},
+    {file = "recordclass-0.21.1-cp38-cp38-win_amd64.whl", hash = "sha256:fb9a5a178cb0c3e0e2829c767da936818e0630b44c7ddb7ad28aac4f2aff327c"},
+    {file = "recordclass-0.21.1-cp39-cp39-win32.whl", hash = "sha256:5d8cdfd0ccdc0cfe96f6ac7d4f73cd4b613a49a814dfd6cbfb206f27c485c373"},
+    {file = "recordclass-0.21.1-cp39-cp39-win_amd64.whl", hash = "sha256:40768124fe76b4b1aa805fa5929f4a282126ceeab547d9ab8dc7efe4698653c3"},
+    {file = "recordclass-0.21.1.tar.gz", hash = "sha256:fa2343dc24ef457f5f1c09e34fccada2d9074f582287f9fedb195bfbc1a9af92"},
+]
+
+[[package]]
 name = "six"
 version = "1.16.0"
 description = "Python 2 and 3 compatibility utilities"
@@ -40,4 +64,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "c96fb971d2bb247127cfff23b353c5b87aa6c12bffe62b00da6141db46e703c2"
+content-hash = "883241f22d0629655122944099a3e767ea7952659eeaa917425b35a39cb61154"
