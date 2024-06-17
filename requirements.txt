@@ -1,0 +1,3 @@
+cplex @ file:///opt/ibm/ILOG/CPLEX_Studio2211/cplex/python/3.10/x86-64_linux
+docplex==2.27.239
+six==1.16.0
