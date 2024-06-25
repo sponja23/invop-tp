@@ -1,0 +1,5 @@
+# Python cache
+__pycache__/
+
+# Mypy cache
+.mypy_cache/

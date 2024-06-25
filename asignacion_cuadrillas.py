@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import sys
 from typing import Iterable, Literal
 from itertools import pairwise, product
@@ -7,7 +7,6 @@ from itertools import pairwise, product
 import cplex
 from recordclass import recordclass
 
-TOLERANCE = 10e-6
 Orden = recordclass("Orden", "id beneficio cant_trab")
 
 
@@ -16,6 +15,7 @@ class InstanciaAsignacionCuadrillas:
         self.cantidad_trabajadores = 0
         self.cantidad_ordenes = 0
         self.ordenes = []
+
         self.conflictos_trabajadores = []
         self.ordenes_correlativas = []
         self.ordenes_conflictivas = []
@@ -95,41 +95,54 @@ class Variable:
     cota_superior: float
     tipo: Literal["C", "I", "B"]
 
+    def __post_init__(self):
+        self.costo = float(self.costo)
+        self.cota_inferior = float(self.cota_inferior)
+        self.cota_superior = float(self.cota_superior)
+
 
 @dataclass
 class Restriccion:
     terminos_izq: list[tuple[float, str]]
     sentido: Literal["L", "G", "E"]
-    terminos_der: list[tuple[float, str]]
+    terminos_der: list[tuple[float, str]] = field(default_factory=list)
     term_independiente: float = 0
     nombre: str = ""
+
+    def __post_init__(self):
+        self.terminos_izq = [(float(coef), var) for coef, var in self.terminos_izq]
+        self.term_independiente = float(self.term_independiente)
+        self.terminos_der = [(float(coef), var) for coef, var in self.terminos_der]
+
+
+INDICES_DIAS = range(1, 7)
+INDICES_TURNOS = range(1, 6)
 
 
 class ModeloAsignacionCuadrillas:
     def __init__(self, instancia):
         self.instancia = instancia
+        self.indices_ordenes = range(self.instancia.cantidad_ordenes)
+        self.indices_trabajadores = range(self.instancia.cantidad_trabajadores)
 
         self.variables: list[Variable] = []
         self.nombre_a_indice: dict[str, int] = {}
+        self.indice_a_nombre: dict[int, str] = {}
+        self.restricciones: list[Restriccion] = []
 
         self.armar_variables()
-
-        self.restricciones: list[Restriccion] = []
+        self.armar_restricciones()
 
     def nueva_variable(self, var: Variable) -> None:
         self.variables.append(var)
         self.nombre_a_indice[var.nombre] = len(self.variables) - 1
+        self.indice_a_nombre[len(self.variables) - 1] = var.nombre
 
     def nuevas_variables(self, variables: Iterable[Variable]) -> None:
         for var in variables:
             self.nueva_variable(var)
 
     def armar_variables(self):
-        indices_ordenes = range(self.instancia.cantidad_ordenes)
-        indices_trabajadores = range(self.instancia.cantidad_trabajadores)
-        indices_dias = range(1, 7)
-        indices_turnos = range(1, 6)
-
         # a_i_j_k_l indica si el trabajador j fue asignado a la orden i
         # en el turno l del día k.
         self.nuevas_variables(
@@ -141,10 +154,10 @@ class ModeloAsignacionCuadrillas:
                     cota_superior=1,
                     tipo="B",
                 )
-                for i in indices_ordenes
-                for j in indices_trabajadores
-                for k in indices_dias
-                for l in indices_turnos  # noqa: E741
+                for i in self.indices_ordenes
+                for j in self.indices_trabajadores
+                for k in INDICES_DIAS
+                for l in INDICES_TURNOS  # noqa: E741
             ]
         )
 
@@ -158,9 +171,9 @@ class ModeloAsignacionCuadrillas:
                     cota_superior=1,
                     tipo="B",
                 )
-                for i in indices_ordenes
-                for k in indices_dias
-                for l in indices_turnos  # noqa: E741
+                for i in self.indices_ordenes
+                for k in INDICES_DIAS
+                for l in INDICES_TURNOS  # noqa: E741
             ]
         )
 
@@ -174,8 +187,8 @@ class ModeloAsignacionCuadrillas:
                     cota_superior=1,
                     tipo="B",
                 )
-                for j in indices_trabajadores
-                for k in indices_dias
+                for j in self.indices_trabajadores
+                for k in INDICES_DIAS
             ]
         )
 
@@ -192,7 +205,7 @@ class ModeloAsignacionCuadrillas:
                     cota_superior=5,
                     tipo="I",
                 )
-                for j in indices_trabajadores
+                for j in self.indices_trabajadores
             ]
         )
 
@@ -207,7 +220,7 @@ class ModeloAsignacionCuadrillas:
                     cota_superior=5,
                     tipo="I",
                 )
-                for j in indices_trabajadores
+                for j in self.indices_trabajadores
             ]
         )
 
@@ -222,7 +235,7 @@ class ModeloAsignacionCuadrillas:
                     cota_superior=5,
                     tipo="I",
                 )
-                for j in indices_trabajadores
+                for j in self.indices_trabajadores
             ]
         )
 
@@ -234,10 +247,10 @@ class ModeloAsignacionCuadrillas:
                     nombre=f"o4_{j}",
                     costo=-1500,
                     cota_inferior=0,
-                    cota_superior=len(indices_ordenes),
+                    cota_superior=max(len(self.indices_ordenes) - 15, 0),
                     tipo="I",
                 )
-                for j in indices_trabajadores
+                for j in self.indices_trabajadores
             ]
         )
 
@@ -251,7 +264,7 @@ class ModeloAsignacionCuadrillas:
                     cota_superior=1,
                     tipo="B",
                 )
-                for j in indices_trabajadores
+                for j in self.indices_trabajadores
             ]
         )
 
@@ -265,7 +278,7 @@ class ModeloAsignacionCuadrillas:
                     cota_superior=1,
                     tipo="B",
                 )
-                for j in indices_trabajadores
+                for j in self.indices_trabajadores
             ]
         )
 
@@ -279,7 +292,7 @@ class ModeloAsignacionCuadrillas:
                     cota_superior=1,
                     tipo="B",
                 )
-                for j in indices_trabajadores
+                for j in self.indices_trabajadores
             ]
         )
 
@@ -290,45 +303,39 @@ class ModeloAsignacionCuadrillas:
                     nombre=f"o_{j}",
                     costo=0,
                     cota_inferior=0,
-                    cota_superior=len(indices_ordenes),
+                    cota_superior=len(self.indices_ordenes),
                     tipo="I",
                 )
-                for j in indices_trabajadores
+                for j in self.indices_trabajadores
             ]
         )
 
     def armar_restricciones(self):
-        indices_ordenes = range(self.instancia.cantidad_ordenes)
-        indices_trabajadores = range(self.instancia.cantidad_trabajadores)
-        indices_dias = range(1, 7)
-        indices_turnos = range(1, 6)
-
         # Cantidad de órdenes de un trabajador
         self.restricciones += [
             Restriccion(
                 terminos_izq=[
                     (1, f"a_{i}_{j}_{k}_{l}")
-                    for i in indices_ordenes
-                    for k in indices_dias
-                    for l in indices_turnos  # noqa: E741
+                    for i in self.indices_ordenes
+                    for k in INDICES_DIAS
+                    for l in INDICES_TURNOS  # noqa: E741
                 ],
                 sentido="E",
                 terminos_der=[(1, f"o_{j}")],
-                term_independiente=1,
             )
-            for j in indices_trabajadores
+            for j in self.indices_trabajadores
         ]
 
         # Se puede realizar a lo sumo una orden por turno
         self.restricciones += [
             Restriccion(
-                terminos_izq=[(1, f"a_{i}_{j}_{k}_{l}") for i in indices_ordenes],
+                terminos_izq=[(1, f"a_{i}_{j}_{k}_{l}") for i in self.indices_ordenes],
                 sentido="L",
                 term_independiente=1,
             )
-            for j in indices_trabajadores
-            for k in indices_dias
-            for l in indices_turnos  # noqa: E741
+            for j in self.indices_trabajadores
+            for k in INDICES_DIAS
+            for l in INDICES_TURNOS  # noqa: E741
         ]
 
         # Definición de d_j_k
@@ -336,36 +343,36 @@ class ModeloAsignacionCuadrillas:
             Restriccion(
                 terminos_izq=[
                     (1, f"a_{i}_{j}_{k}_{l}")
-                    for i in indices_ordenes
-                    for l in indices_turnos  # noqa: E741
+                    for i in self.indices_ordenes
+                    for l in INDICES_TURNOS  # noqa: E741
                 ],
                 sentido="G",
                 terminos_der=[(1, f"d_{j}_{k}")],
             )
-            for j in indices_trabajadores
-            for k in indices_dias
+            for j in self.indices_trabajadores
+            for k in INDICES_DIAS
         ] + [
             Restriccion(
                 terminos_izq=[
                     (1, f"a_{i}_{j}_{k}_{l}")
-                    for i in indices_ordenes
-                    for l in indices_turnos  # noqa: E741
+                    for i in self.indices_ordenes
+                    for l in INDICES_TURNOS  # noqa: E741
                 ],
                 sentido="L",
                 terminos_der=[(5, f"d_{j}_{k}")],
             )
-            for j in indices_trabajadores
-            for k in indices_dias
+            for j in self.indices_trabajadores
+            for k in INDICES_DIAS
         ]
 
         # Ningún trabajador puede trabajar los 6 días
         self.restricciones += [
             Restriccion(
-                terminos_izq=[(1, f"d_{j}_{k}") for k in indices_dias],
+                terminos_izq=[(1, f"d_{j}_{k}") for k in INDICES_DIAS],
                 sentido="L",
                 term_independiente=5,
             )
-            for j in indices_trabajadores
+            for j in self.indices_trabajadores
         ]
 
         # Ningún trabajador puede trabajar los 5 turnos del día
@@ -373,22 +380,22 @@ class ModeloAsignacionCuadrillas:
             Restriccion(
                 terminos_izq=[
                     (1, f"a_{i}_{j}_{k}_{l}")
-                    for i in indices_ordenes
-                    for l in indices_turnos  # noqa: E741
+                    for i in self.indices_ordenes
+                    for l in INDICES_TURNOS  # noqa: E741
                 ],
                 sentido="L",
                 term_independiente=4,
             )
-            for j in indices_trabajadores
-            for k in indices_dias
+            for j in self.indices_trabajadores
+            for k in INDICES_DIAS
         ]
 
         # Órdenes Conflictivas
         self.restricciones += [
             restr
-            for (l, next_l) in pairwise(indices_turnos)  # noqa: E741
-            for k in indices_dias
-            for j in indices_trabajadores
+            for (l, next_l) in pairwise(INDICES_TURNOS)  # noqa: E741
+            for k in INDICES_DIAS
+            for j in self.indices_trabajadores
             for (i1, i2) in self.instancia.ordenes_conflictivas
             for restr in [
                 Restriccion(
@@ -417,12 +424,12 @@ class ModeloAsignacionCuadrillas:
                 sentido="E",
                 terminos_der=[
                     (1, f"a_{i}_{j}_{k}_{l}")
-                    for j in indices_trabajadores  # noqa: E741
+                    for j in self.indices_trabajadores  # noqa: E741
                 ],
             )
-            for i in indices_ordenes
-            for k in indices_dias
-            for l in indices_turnos  # noqa: E741
+            for i in self.indices_ordenes
+            for k in INDICES_DIAS
+            for l in INDICES_TURNOS  # noqa: E741
         ]
 
         # Cada orden se realiza a lo sumo una vez
@@ -430,13 +437,13 @@ class ModeloAsignacionCuadrillas:
             Restriccion(
                 terminos_izq=[
                     (1, f"r_{i}_{k}_{l}")
-                    for k in indices_dias
-                    for l in indices_turnos  # noqa: E741
+                    for k in INDICES_DIAS
+                    for l in INDICES_TURNOS  # noqa: E741
                 ],
                 sentido="L",
                 term_independiente=1,
             )
-            for i in indices_ordenes
+            for i in self.indices_ordenes
         ]
 
         # Órdenes Correlativas
@@ -446,10 +453,10 @@ class ModeloAsignacionCuadrillas:
                 sentido="L",
                 terminos_der=[(1, f"r_{i2}_{k}_{next_l}")],
             )
-            for (l, next_l) in pairwise(indices_turnos)  # noqa: E741
+            for (l, next_l) in pairwise(INDICES_TURNOS)  # noqa: E741
             for (i1, i2) in self.instancia.ordenes_correlativas
-            for k in indices_dias
-            for l in indices_turnos  # noqa: E741
+            for k in INDICES_DIAS
+            for l in INDICES_TURNOS  # noqa: E741
         ]
 
         # La diferencia entre la cantidad de órdenes realizadas por cada par
@@ -463,12 +470,92 @@ class ModeloAsignacionCuadrillas:
                 sentido="L",
                 term_independiente=8,
             )
-            for j1, j2 in product(indices_trabajadores, repeat=2)
+            for j1, j2 in product(self.indices_trabajadores, repeat=2)
             if j1 != j2
+        ]
+
+        # Remuneración
+
+        # w^1_j sólo puede ser 1 si o^1_j es 5
+        self.restricciones += [
+            Restriccion(
+                terminos_izq=[(5, f"w1_{j}")],
+                sentido="L",
+                terminos_der=[(1, f"o1_{j}")],
+            )
+            for j in self.indices_trabajadores
+        ]
+
+        # w^2_j sólo puede ser 1 si o^2_j es 5
+        self.restricciones += [
+            Restriccion(
+                terminos_izq=[(5, f"w2_{j}")],
+                sentido="L",
+                terminos_der=[(1, f"o2_{j}")],
+            )
+            for j in self.indices_trabajadores
+        ]
+
+        # o^2_j sólo puede ser positiva si w^1_j es 1
+        self.restricciones += [
+            Restriccion(
+                terminos_izq=[(1, f"o2_{j}")],
+                sentido="L",
+                terminos_der=[(5, f"w1_{j}")],
+            )
+            for j in self.indices_trabajadores
+        ]
+
+        # w^3_j sólo puede ser 1 si o^3_j es 5
+        self.restricciones += [
+            Restriccion(
+                terminos_izq=[(5, f"w3_{j}")],
+                sentido="L",
+                terminos_der=[(1, f"o3_{j}")],
+            )
+            for j in self.indices_trabajadores
+        ]
+
+        # o^3_j sólo puede ser positiva si w^2_j es 1
+        self.restricciones += [
+            Restriccion(
+                terminos_izq=[(1, f"o3_{j}")],
+                sentido="L",
+                terminos_der=[(5, f"w2_{j}")],
+            )
+            for j in self.indices_trabajadores
+        ]
+
+        # o^4_j sólo puede ser positiva si w^3_j es 1
+        self.restricciones += [
+            Restriccion(
+                terminos_izq=[(1, f"o4_{j}")],
+                sentido="L",
+                terminos_der=[(max(len(self.indices_ordenes) - 15, 0), f"w3_{j}")],
+            )
+            for j in self.indices_trabajadores
+        ]
+
+        # o_j es la suma de las órdenes realizadas por el trabajador j
+        self.restricciones += [
+            Restriccion(
+                terminos_izq=[
+                    (1, f"o1_{j}"),
+                    (1, f"o2_{j}"),
+                    (1, f"o3_{j}"),
+                    (1, f"o4_{j}"),
+                ],
+                sentido="E",
+                terminos_der=[(1, f"o_{j}")],
+            )
+            for j in self.indices_trabajadores
         ]
 
     def indice_de(self, nombre: str) -> int:
         return self.nombre_a_indice[nombre]
+
+    def nombre_de(self, indice: int) -> str:
+        return self.indice_a_nombre[indice]
 
     def armar_cplex(self) -> cplex.Cplex:
         prob = cplex.Cplex()
@@ -492,8 +579,10 @@ class ModeloAsignacionCuadrillas:
     def agregar_restricciones(self, prob):
         for restriccion in self.restricciones:
             lin_expr = [
-                (coef, self.indice_de(var)) for coef, var in restriccion.terminos_izq
-            ] + [(-coef, self.indice_de(var)) for coef, var in restriccion.terminos_der]
+                (self.indice_de(var), coef) for coef, var in restriccion.terminos_izq
+            ] + [(self.indice_de(var), -coef) for coef, var in restriccion.terminos_der]
+
+            print(list(zip(*lin_expr)))
 
             prob.linear_constraints.add(
                 lin_expr=[list(zip(*lin_expr))],
@@ -502,49 +591,49 @@ class ModeloAsignacionCuadrillas:
             )
 
 
-def agregar_variables(prob, instancia):
-    # Definir y agregar las variables:
-    # metodo 'add' de 'variables', con parametros:
-    # obj: costos de la funcion objetivo
-    # lb: cotas inferiores
-    # ub: cotas superiores
-    # types: tipo de las variables
-    # names: nombre (como van a aparecer en el archivo .lp)
-    ...
+TOLERANCE = 10e-6
 
 
-def agregar_restricciones(prob, instancia):
-    # Agregar las restricciones ax <= (>= ==) b:
-    # funcion 'add' de 'linear_constraints' con parametros:
-    # lin_expr: lista de listas de [ind,val] de a
-    # sense: lista de 'L', 'G' o 'E'
-    # rhs: lista de los b
-    # names: nombre (como van a aparecer en el archivo .lp)
+def mostrar_solucion(sol: list[int], modelo: ModeloAsignacionCuadrillas) -> None:
+    ordenes_realizadas = [
+        i
+        for i in modelo.indices_ordenes
+        if any(
+            sol[modelo.indice_de(f"r_{i}_{k}_{l}")] > 1 - TOLERANCE
+            for k in INDICES_DIAS
+            for l in INDICES_TURNOS  # noqa: E741
+        )
+    ]
 
-    # Notar que cplex espera "una matriz de restricciones", es decir, una
-    # lista de restricciones del tipo ax <= b, [ax <= b]. Por lo tanto, aun cuando
-    # agreguemos una unica restriccion, tenemos que hacerlo como una lista de un unico
-    # elemento.
-    ...
+    print(f"Ordenes realizadas: {ordenes_realizadas}")
 
+    for orden in ordenes_realizadas:
+        print(f"Orden {orden}:")
+        for k in INDICES_DIAS:
+            for l in INDICES_TURNOS:  # noqa: E741
+                if sol[modelo.indice_de(f"r_{orden}_{k}_{l}")] > 1 - TOLERANCE:
+                    print(f"  Día {k}, Turno {l}:")
+                    for j in modelo.indices_trabajadores:
+                        if (
+                            sol[modelo.indice_de(f"a_{orden}_{j}_{k}_{l}")]
+                            > 1 - TOLERANCE
+                        ):
+                            print(f"    Trabajador {j}")
 
-def armar_lp(prob, instancia):
-    # Agregar las variables
-    agregar_variables(prob, instancia)
-
-    # Agregar las restricciones
-    agregar_restricciones(prob, instancia)
-
-    # Setear el sentido del problema
-    prob.objective.set_sense(prob.objective.sense)
-
-    # Escribir el lp a archivo
-    prob.write("asignacionCuadrillas.lp")
+    print("Órdenes realizadas por trabajador:")
+    for j in modelo.indices_trabajadores:
+        print(f"  Trabajador {j}: {sol[modelo.indice_de(f'o_{j}')]}")
+        print(
+            f"    0-5: {sol[modelo.indice_de(f'o1_{j}')]}",
+            f"    6-10: {sol[modelo.indice_de(f'o2_{j}')]}",
+            f"    11-15: {sol[modelo.indice_de(f'o3_{j}')]}",
+            f"    16+: {sol[modelo.indice_de(f'o4_{j}')]}",
+        )
 
 
 def resolver_lp(prob):
     # Definir los parametros del solver
-    prob.parameters
+    prob.parameters.mip.tolerances.mipgap.set(1e-10)
 
     # Resolver el lp
     prob.solve()
@@ -561,26 +650,23 @@ def resolver_lp(prob):
     print("Funcion objetivo: ", valor_obj, "(" + str(status) + ")")
 
     # Tomar los valores de las variables
-    x = prob.solution.get_values()
-    # Mostrar las variables con valor positivo (mayor que una tolerancia)
-    ...
+    return prob.solution.get_values()
 
 
 def main():
     # Lectura de datos desde el archivo de entrada
     instancia = cargar_instancia()
 
-    # Definicion del problema de Cplex
-    prob = cplex.Cplex()
+    # Creacion del modelo
+    modelo = ModeloAsignacionCuadrillas(instancia)
 
-    # Definicion del modelo
-    armar_lp(prob, instancia)
+    # Armado del modelo
+    prob = modelo.armar_cplex()
 
     # Resolucion del modelo
-    resolver_lp(prob)
+    x = resolver_lp(prob)
 
-    # Obtencion de la solucion
-    mostrar_solucion(prob, instancia)
+    mostrar_solucion(x, modelo)
 
 
 if __name__ == "__main__":
