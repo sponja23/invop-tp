@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 import sys
-from typing import Iterable, Literal
+from typing import Iterable, List, Literal, Tuple
 from itertools import pairwise, product
 
 # importamos el modulo cplex
@@ -103,9 +103,9 @@ class Variable:
 
 @dataclass
 class Restriccion:
-    terminos_izq: list[tuple[float, str]]
+    terminos_izq: List[Tuple[float, str]]
     sentido: Literal["L", "G", "E"]
-    terminos_der: list[tuple[float, str]] = field(default_factory=list)
+    terminos_der: List[Tuple[float, str]] = field(default_factory=list)
     term_independiente: float = 0
     nombre: str = ""
 
@@ -125,10 +125,10 @@ class ModeloAsignacionCuadrillas:
         self.indices_ordenes = range(self.instancia.cantidad_ordenes)
         self.indices_trabajadores = range(self.instancia.cantidad_trabajadores)
 
-        self.variables: list[Variable] = []
+        self.variables: List[Variable] = []
         self.nombre_a_indice: dict[str, int] = {}
         self.indice_a_nombre: dict[int, str] = {}
-        self.restricciones: list[Restriccion] = []
+        self.restricciones: List[Restriccion] = []
 
         self.armar_variables()
         self.armar_restricciones()
@@ -594,7 +594,7 @@ class ModeloAsignacionCuadrillas:
 TOLERANCE = 10e-6
 
 
-def mostrar_solucion(sol: list[int], modelo: ModeloAsignacionCuadrillas) -> None:
+def mostrar_solucion(sol: List[int], modelo: ModeloAsignacionCuadrillas) -> None:
     ordenes_realizadas = [
         i
         for i in modelo.indices_ordenes
