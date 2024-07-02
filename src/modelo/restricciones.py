@@ -14,7 +14,7 @@ class Restriccion:
     term_independiente: float = 0
     nombre: str = ""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Aseguramos que todos los coeficientes sean floats
         self.terminos_izq = [(float(coef), var) for coef, var in self.terminos_izq]
         self.term_independiente = float(self.term_independiente)

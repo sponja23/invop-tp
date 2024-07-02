@@ -1,7 +1,7 @@
 from itertools import chain
 from typing import List, Tuple
 
-from ...asignacion_cuadrillas import InstanciaAsignacionCuadrillas
+from ..instancia import InstanciaAsignacionCuadrillas
 
 
 Objetivo = List[Tuple[float, str]]

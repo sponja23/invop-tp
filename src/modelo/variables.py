@@ -12,8 +12,7 @@ class Variable:
     cota_superior: float
     tipo: Literal["C", "I", "B"]
 
-    def __post_init__(self):
-        self.costo = float(self.costo)
+    def __post_init__(self) -> None:
         self.cota_inferior = float(self.cota_inferior)
         self.cota_superior = float(self.cota_superior)
 
@@ -88,7 +87,7 @@ def variables_remuneracion_trabajador(
     - `w2_{j}` = 1 sii el trabajador j realiza al menos 10 órdenes.
     - `w3_{j}` = 1 sii el trabajador j realiza al menos 15 órdenes.
     """
-    return chain.from_itertools(
+    return chain.from_iterable(
         [
             (
                 Variable(
@@ -100,13 +99,13 @@ def variables_remuneracion_trabajador(
                 Variable(
                     nombre=f"o2_{j}",
                     cota_inferior=0,
-                    cota_superior=min(5, max(len(instancia.indices_ordenes) - 5), 0),
+                    cota_superior=min(5, max(len(instancia.indices_ordenes) - 5, 0)),
                     tipo="I",
                 ),
                 Variable(
                     nombre=f"o3_{j}",
                     cota_inferior=0,
-                    cota_superior=min(5, max(len(instancia.indices_ordenes) - 10), 0),
+                    cota_superior=min(5, max(len(instancia.indices_ordenes) - 10, 0)),
                     tipo="I",
                 ),
                 Variable(
