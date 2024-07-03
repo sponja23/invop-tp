@@ -1,15 +1,16 @@
+from collections.abc import Iterable
 from itertools import chain
-from typing import List, Tuple
+from typing import Tuple
 
 from ..instancia import InstanciaAsignacionCuadrillas
 
 
-Objetivo = List[Tuple[float, str]]
+TerminosObjetivo = Iterable[Tuple[float, str]]
 
 
 def objetivo_asignacion_cuadrillas(
     instancia: InstanciaAsignacionCuadrillas,
-) -> Objetivo:
+) -> TerminosObjetivo:
     """
     Se busca maximizar la ganancia total, compuesta por el beneficio de cada orden asignada
     y el costo de las asignaciones a los trabajadores.

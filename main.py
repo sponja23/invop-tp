@@ -2,6 +2,13 @@ import argparse
 
 from src.instancia import InstanciaAsignacionCuadrillas
 from src.modelo import ModeloAsignacionCuadrillas
+from src.modelo.restricciones_deseables import (
+    EvitarConflictos,
+    EvitarRepeticiones,
+    IgnorarConflictos,
+    IgnorarRepeticiones,
+)
+from src.modelo.modelo import ConfiguracionAsignacionCuadrillas
 from src.solucion import mostrar_solucion
 
 parser = argparse.ArgumentParser(
@@ -13,7 +20,13 @@ args = parser.parse_args()
 
 instancia = InstanciaAsignacionCuadrillas.leer_instancia(args.instancia)
 
-modelo = ModeloAsignacionCuadrillas(instancia)
+modelo = ModeloAsignacionCuadrillas(
+    instancia,
+    configuracion=ConfiguracionAsignacionCuadrillas(
+        estrategia_conflictos=IgnorarConflictos(),
+        estrategia_repetitiva=IgnorarRepeticiones(),
+    ),
+)
 
 cpx = modelo.armar_cplex()
 

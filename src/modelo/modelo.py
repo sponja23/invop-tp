@@ -1,10 +1,14 @@
-from typing import List
+from collections.abc import Iterable
+from dataclasses import dataclass
+from typing import Dict, List
 
 import cplex
 
+from .restricciones_deseables import EstrategiaConflictos, EstrategiaRepeticiones
+
 from ..instancia import InstanciaAsignacionCuadrillas
 from ..solucion import SolucionAnotada
-from .objetivo import Objetivo, objetivo_asignacion_cuadrillas
+from .objetivo import TerminosObjetivo, objetivo_asignacion_cuadrillas
 from .restricciones import (
     Restriccion,
     restricciones_definicion_d_jk,
@@ -28,49 +32,78 @@ from .variables import (
 )
 
 
+@dataclass
+class ConfiguracionAsignacionCuadrillas:
+    estrategia_conflictos: EstrategiaConflictos
+    estrategia_repetitiva: EstrategiaRepeticiones
+
+
 class ModeloAsignacionCuadrillas:
-    def __init__(self, instancia: InstanciaAsignacionCuadrillas):
+    def __init__(
+        self,
+        instancia: InstanciaAsignacionCuadrillas,
+        configuracion: ConfiguracionAsignacionCuadrillas,
+    ):
         self.instancia = instancia
 
-        self.variables = self.generar_variables()
-        self.restricciones = self.generar_restricciones()
-        self.objetivo = self.generar_objetivo()
+        self.variables: List[Variable] = []
+        self.restricciones: List[Restriccion] = []
+        self.objetivo: List[tuple[float, str]] = []
 
-        self.nombre_a_indice = {var.nombre: i for i, var in enumerate(self.variables)}
+        self.nombre_a_indice: Dict[str, int] = {}
 
-    def generar_variables(self) -> List[Variable]:
-        return [
-            var
-            for var_conj_fn in [
-                variables_asignacion_orden_trabajador_dia_turno,
-                variables_realizacion_orden_dia_turno,
-                variables_trabajo_trabajador_dia,
-                variables_remuneracion_trabajador,
-            ]
-            for var in var_conj_fn(self.instancia)
-        ]
+        self.agregar_variables_base()
+        self.agregar_restricciones_base()
+        self.agregar_objetivo_base()
 
-    def generar_restricciones(self) -> List[Restriccion]:
-        return [
-            restr
-            for restr_conj_fn in [
-                restricciones_trabajo_simultaneo,
-                restricciones_limite_diario,
-                restricciones_definicion_d_jk,
-                restricciones_limite_semanal,
-                restricciones_definicion_r_ikl,
-                restricciones_repeticion_de_ordenes,
-                restricciones_ordenes_conflictivas,
-                restricciones_ordenes_correlativas,
-                restricciones_linearizacion_remuneracion,
-                restricciones_definicion_remuneracion,
-                restricciones_diferencia_maxima_turnos,
-            ]
-            for restr in restr_conj_fn(self.instancia)
-        ]
+        configuracion.estrategia_conflictos(instancia, self)
+        configuracion.estrategia_repetitiva(instancia, self)
 
-    def generar_objetivo(self) -> Objetivo:
-        return objetivo_asignacion_cuadrillas(self.instancia)
+    def agregar_variable(self, variable: Variable) -> None:
+        self.variables.append(variable)
+        self.nombre_a_indice[variable.nombre] = len(self.variables) - 1
+
+    def agregar_variables(self, variables: Iterable[Variable]) -> None:
+        for var in variables:
+            self.agregar_variable(var)
+
+    def agregar_restriccion(self, restriccion: Restriccion) -> None:
+        self.restricciones.append(restriccion)
+
+    def agregar_restricciones(self, restricciones: Iterable[Restriccion]) -> None:
+        for restr in restricciones:
+            self.agregar_restriccion(restr)
+
+    def agregar_objetivo(self, terminos: TerminosObjetivo) -> None:
+        self.objetivo += terminos
+
+    def agregar_variables_base(self) -> None:
+        for var_conj_fn in [
+            variables_asignacion_orden_trabajador_dia_turno,
+            variables_realizacion_orden_dia_turno,
+            variables_trabajo_trabajador_dia,
+            variables_remuneracion_trabajador,
+        ]:
+            self.agregar_variables(var_conj_fn(self.instancia))
+
+    def agregar_restricciones_base(self) -> None:
+        for restr_conj_fn in [
+            restricciones_trabajo_simultaneo,
+            restricciones_limite_diario,
+            restricciones_definicion_d_jk,
+            restricciones_limite_semanal,
+            restricciones_definicion_r_ikl,
+            restricciones_repeticion_de_ordenes,
+            restricciones_ordenes_conflictivas,
+            restricciones_ordenes_correlativas,
+            restricciones_linearizacion_remuneracion,
+            restricciones_definicion_remuneracion,
+            restricciones_diferencia_maxima_turnos,
+        ]:
+            self.agregar_restricciones(restr_conj_fn(self.instancia))
+
+    def agregar_objetivo_base(self) -> None:
+        self.agregar_objetivo(objetivo_asignacion_cuadrillas(self.instancia))
 
     def indice_de(self, var_nombre: str) -> int:
         return self.nombre_a_indice[var_nombre]
