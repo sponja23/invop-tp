@@ -8,7 +8,11 @@ from .restricciones_deseables import EstrategiaConflictos, EstrategiaRepeticione
 
 from ..instancia import InstanciaAsignacionCuadrillas
 from ..solucion import SolucionAnotada
-from .objetivo import TerminosObjetivo, objetivo_asignacion_cuadrillas
+from .objetivo import (
+    TerminosObjetivo,
+    objetivo_beneficio_ordenes,
+    objetivo_costo_trabajadores,
+)
 from .restricciones import (
     Restriccion,
     restricciones_definicion_d_jk,
@@ -103,7 +107,8 @@ class ModeloAsignacionCuadrillas:
             self.agregar_restricciones(restr_conj_fn(self.instancia))
 
     def agregar_objetivo_base(self) -> None:
-        self.agregar_objetivo(objetivo_asignacion_cuadrillas(self.instancia))
+        self.agregar_objetivo(objetivo_beneficio_ordenes(self.instancia))
+        self.agregar_objetivo(objetivo_costo_trabajadores(self.instancia))
 
     def indice_de(self, var_nombre: str) -> int:
         return self.nombre_a_indice[var_nombre]
