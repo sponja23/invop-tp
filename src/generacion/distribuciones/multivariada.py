@@ -22,28 +22,29 @@ def cholesky_2d(matriz: Matriz2D) -> Matriz2D:
 
 
 N = TypeVar("N", int, float)
+M = TypeVar("M", int, float)
 
 
-class DistribucionBivariada(ABC, Generic[N]):
+class DistribucionBivariada(ABC, Generic[N, M]):
     """Distribución bivariada"""
 
     @abstractmethod
-    def muestrear(self) -> Tuple[N, N]:
+    def muestrear(self) -> Tuple[N, M]:
         """Muestrea un par de números"""
 
 
-class DistribucionIndependiente(DistribucionBivariada[N]):
+class DistribucionIndependiente(DistribucionBivariada[N, M]):
     """Distribución bivariada independiente"""
 
-    def __init__(self, dist1: Distribucion[N], dist2: Distribucion[N]):
+    def __init__(self, dist1: Distribucion[N], dist2: Distribucion[M]):
         self.dist1: Distribucion[N] = dist1
-        self.dist2: Distribucion[N] = dist2
+        self.dist2: Distribucion[M] = dist2
 
-    def muestrear(self) -> Tuple[N, N]:
+    def muestrear(self) -> Tuple[N, M]:
         return self.dist1.muestrear(), self.dist2.muestrear()
 
 
-class DistribucionNormalBivariada(DistribucionBivariada[float]):
+class DistribucionNormalBivariada(DistribucionBivariada[float, float]):
     """Distribución normal bivariada"""
 
     def __init__(self, media: Tuple[float, float], matriz_cov: Matriz2D):
