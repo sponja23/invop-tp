@@ -1,41 +1,46 @@
-from typing import Dict
+from dataclasses import dataclass
+from itertools import product
+from typing import Dict, Set, Tuple
 
 from .instancia import InstanciaAsignacionCuadrillas
 
 
-SolucionAnotada = Dict[str, float]
+TOL = 1e-8
 
 
-def mostrar_solucion(
-    instancia: InstanciaAsignacionCuadrillas,
-    solucion: SolucionAnotada,
-    *,
-    tol: float = 1e-8,
-) -> None:
-    ordenes_realizadas = [
-        i
-        for i in instancia.indices_ordenes
-        if any(
-            solucion[f"r_{i}_{k}_{l}"] > 1 - tol
-            for k in instancia.indices_dias
-            for l in instancia.indices_turnos
-        )
-    ]
+@dataclass
+class SolucionAnotada:
+    instancia: InstanciaAsignacionCuadrillas
+    valores: Dict[str, float]
 
-    print(f"Ordenes realizadas: {ordenes_realizadas}")
+    def __post_init__(self) -> None:
+        self.ordenes_realizadas: Set[int] = set()
+        # trabajador -> órdenes
+        self.ordenes_realizadas_por_trabajador: Dict[int, Set[int]] = {
+            j: set() for j in self.instancia.indices_trabajadores
+        }
+        # orden -> (dia, turno, trabajadores)
+        self.asignacion_de_orden: Dict[int, Tuple[int, int, Set[int]]] = {}
 
-    for orden in ordenes_realizadas:
-        print(f"Orden {orden}:")
-        for k in instancia.indices_dias:
-            for l in instancia.indices_turnos:
-                if solucion[f"r_{orden}_{k}_{l}"] > 1 - tol:
-                    print(f"  Día {k}, Turno {l}:")
-                    for j in instancia.indices_trabajadores:
-                        if solucion[f"a_{orden}_{j}_{k}_{l}"] > 1 - tol:
-                            print(f"    Trabajador {j}")
+        for i, j, k, l in product(
+            self.instancia.indices_ordenes,
+            self.instancia.indices_trabajadores,
+            self.instancia.indices_dias,
+            self.instancia.indices_turnos,
+        ):
+            if self.valores[f"a_{i}_{j}_{k}_{l}"] > 1 - TOL:
+                self.ordenes_realizadas.add(i)
+                self.ordenes_realizadas_por_trabajador[j].add(i)
+                self.asignacion_de_orden.setdefault(i, (k, l, set()))[2].add(j)
 
-    print("Órdenes realizadas por trabajador:")
-    for j in instancia.indices_trabajadores:
-        print(
-            f"  Trabajador {j}: {solucion[f'o1_{j}'] + solucion[f'o2_{j}'] + solucion[f'o3_{j}'] + solucion[f'o4_{j}']}"
-        )
+    def mostrar(self) -> None:
+        print("Ordenes realizadas:", self.ordenes_realizadas)
+
+        for i, (dia, turno, trabajadores) in self.asignacion_de_orden.items():
+            print(f"Orden {i}:")
+            print(f"  Día {dia}, Turno {turno}:")
+            print("    Trabajadores:", trabajadores)
+
+        print("Órdenes realizadas por trabajador:")
+        for j, ordenes in self.ordenes_realizadas_por_trabajador.items():
+            print(f"  Trabajador {j}: {ordenes}")

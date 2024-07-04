@@ -9,7 +9,6 @@ from src.modelo.restricciones_deseables import (
     IgnorarRepeticiones,
 )
 from src.modelo.modelo import ConfiguracionAsignacionCuadrillas
-from src.solucion import mostrar_solucion
 
 parser = argparse.ArgumentParser(
     description="Resuelve el problema de asignación de cuadrillas"
@@ -38,4 +37,4 @@ print("Función objetivo:", cpx.solution.get_objective_value())
 solucion = cpx.solution.get_values()
 anotada = modelo.anotar_solucion(solucion)
 
-mostrar_solucion(instancia, anotada)
+anotada.mostrar()

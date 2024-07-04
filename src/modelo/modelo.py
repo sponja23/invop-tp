@@ -143,6 +143,9 @@ class ModeloAsignacionCuadrillas:
 
         return cpx
 
-    def anotar_solucion(self, solucion: list[float]) -> SolucionAnotada:
+    def anotar_solucion(self, solucion: List[float]) -> SolucionAnotada:
         assert len(solucion) == len(self.variables)
-        return {self.nombre_de(i): valor for i, valor in enumerate(solucion)}
+        return SolucionAnotada(
+            instancia=self.instancia,
+            valores={self.nombre_de(i): valor for i, valor in enumerate(solucion)},
+        )
