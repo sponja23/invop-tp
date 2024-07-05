@@ -85,14 +85,12 @@ modelo = ModeloAsignacionCuadrillas(
     ),
 )
 
-cpx = modelo.armar_cplex()
+solver = modelo.armar_solver()
 
-cpx.parameters.mip.tolerances.mipgap.set(1e-10)
-cpx.solve()
+objetivo, valores = solver.resolver()
 
-print("Función objetivo:", cpx.solution.get_objective_value())
 
-solucion = cpx.solution.get_values()
-anotada = modelo.anotar_solucion(solucion)
+print("Función objetivo:", objetivo)
 
+anotada = modelo.anotar_solucion(valores)
 anotada.mostrar()

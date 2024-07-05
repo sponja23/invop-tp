@@ -3,9 +3,7 @@ from itertools import product
 from typing import Dict, Set, Tuple
 
 from .instancia import InstanciaAsignacionCuadrillas
-
-
-TOL = 1e-8
+from .solver import TOL
 
 
 @dataclass

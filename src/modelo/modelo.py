@@ -4,6 +4,8 @@ from typing import Dict, List
 
 import cplex
 
+from ..solver import ConfiguracionCPLEX, Solver
+
 from .restricciones_deseables import EstrategiaConflictos, EstrategiaRepeticiones
 
 from ..instancia import InstanciaAsignacionCuadrillas
@@ -116,7 +118,10 @@ class ModeloAsignacionCuadrillas:
     def nombre_de(self, var_indice: int) -> str:
         return self.variables[var_indice].nombre
 
-    def armar_cplex(self) -> cplex.Cplex:
+    def armar_solver(
+        self,
+        configuracion: ConfiguracionCPLEX = ConfiguracionCPLEX(),
+    ) -> Solver:
         cpx = cplex.Cplex()
         cpx.objective.set_sense(cpx.objective.sense.maximize)
 
@@ -146,7 +151,7 @@ class ModeloAsignacionCuadrillas:
                 rhs=[restr.term_independiente],
             )
 
-        return cpx
+        return Solver(cpx, configuracion=configuracion)
 
     def anotar_solucion(self, solucion: List[float]) -> SolucionAnotada:
         assert len(solucion) == len(self.variables)
