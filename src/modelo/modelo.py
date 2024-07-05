@@ -6,7 +6,12 @@ import cplex
 
 from ..solver import ConfiguracionCPLEX, Solver
 
-from .restricciones_deseables import EstrategiaConflictos, EstrategiaRepeticiones
+from .restricciones_deseables import (
+    EstrategiaConflictos,
+    EstrategiaRepeticiones,
+    IgnorarConflictos,
+    IgnorarRepeticiones,
+)
 
 from ..instancia import InstanciaAsignacionCuadrillas
 from ..solucion import SolucionAnotada
@@ -48,8 +53,11 @@ class ModeloAsignacionCuadrillas:
     def __init__(
         self,
         instancia: InstanciaAsignacionCuadrillas,
-        configuracion: ConfiguracionAsignacionCuadrillas,
-    ):
+        configuracion: ConfiguracionAsignacionCuadrillas = ConfiguracionAsignacionCuadrillas(
+            estrategia_conflictos=IgnorarConflictos(),
+            estrategia_repetitiva=IgnorarRepeticiones(),
+        ),
+    ) -> None:
         self.instancia = instancia
 
         self.variables: List[Variable] = []
@@ -125,7 +133,9 @@ class ModeloAsignacionCuadrillas:
         cpx = cplex.Cplex()
         cpx.objective.set_sense(cpx.objective.sense.maximize)
 
-        obj_map = {nombre: coef for coef, nombre in self.objetivo}
+        obj_map: Dict[str, float] = {}
+        for coef, nombre in self.objetivo:
+            obj_map[nombre] = obj_map.get(nombre, 0) + coef
 
         for var in self.variables:
             cpx.variables.add(

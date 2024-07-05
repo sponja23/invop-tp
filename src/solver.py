@@ -20,6 +20,8 @@ class PlanosDeCorte(Enum):
 class ConfiguracionCPLEX:
     """Configuración para resolver CPlex"""
 
+    sin_output: bool = False
+
     planos_de_corte: PlanosDeCorte = PlanosDeCorte.AUTO
     planos_de_corte_gomory: PlanosDeCorte = PlanosDeCorte.AUTO
     planos_de_corte_bqp: PlanosDeCorte = PlanosDeCorte.AUTO
@@ -28,6 +30,14 @@ class ConfiguracionCPLEX:
     planos_de_corte_disjunctive: PlanosDeCorte = PlanosDeCorte.AUTO
 
     def aplicar(self, cpx: cplex.Cplex) -> None:
+        """Aplica la configuración al solver"""
+
+        if self.sin_output:
+            cpx.set_log_stream(None)
+            cpx.set_error_stream(None)
+            cpx.set_warning_stream(None)
+            cpx.set_results_stream(None)
+
         cpx.parameters.mip.cuts.nodecuts.set(self.planos_de_corte.value)
         cpx.parameters.mip.cuts.gomory.set(self.planos_de_corte_gomory.value)
         cpx.parameters.mip.cuts.bqp.set(self.planos_de_corte_bqp.value)

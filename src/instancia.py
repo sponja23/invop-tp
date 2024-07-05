@@ -52,7 +52,11 @@ class InstanciaAsignacionCuadrillas:
         return range(1, 6)
 
     @staticmethod
-    def leer_instancia(path: str) -> "InstanciaAsignacionCuadrillas":
+    def leer_texto(path: str) -> "InstanciaAsignacionCuadrillas":
+        """
+        Lee la instancia usando el formato de texto especificado en el enunciado.
+        """
+
         with open(path, "r") as f:
             # Lectura cantidad de trabajadores
             cantidad_trabajadores = int(f.readline())
@@ -116,3 +120,39 @@ class InstanciaAsignacionCuadrillas:
                 ordenes_conflictivas=ordenes_conflictivas,
                 ordenes_repetitivas=ordenes_repetitivas,
             )
+
+    def guardar_texto(self, path: str) -> None:
+        """
+        Guarda la instancia usando el formato de texto especificado en el enunciado.
+        """
+
+        lines = [
+            # Cantidad de trabajadores
+            self.cantidad_trabajadores,
+            # Cantidad de órdenes
+            len(self.ordenes),
+            # Órdenes
+            *[
+                f"{orden.id} {orden.beneficio} {orden.cant_trab}"
+                for orden in self.ordenes
+            ],
+            # Cantidad de conflictos entre los trabajadores
+            len(self.conflictos_trabajadores),
+            # Conflictos entre los trabajadores
+            *[f"{j1} {j2}" for j1, j2 in self.conflictos_trabajadores],
+            # Cantidad de órdenes correlativas
+            len(self.ordenes_correlativas),
+            # Órdenes correlativas
+            *[f"{i1} {i2}" for i1, i2 in self.ordenes_correlativas],
+            # Cantidad de órdenes conflictivas
+            len(self.ordenes_conflictivas),
+            # Órdenes conflictivas
+            *[f"{i1} {i2}" for i1, i2 in self.ordenes_conflictivas],
+            # Cantidad de órdenes repetitivas
+            len(self.ordenes_repetitivas),
+            # Órdenes repetitivas
+            *[f"{i1} {i2}" for i1, i2 in self.ordenes_repetitivas],
+        ]
+
+        with open(path, "w") as f:
+            f.write("\n".join(map(str, lines)))
