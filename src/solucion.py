@@ -31,6 +31,9 @@ class SolucionAnotada:
                 self.ordenes_realizadas_por_trabajador[j].add(i)
                 self.asignacion_de_orden.setdefault(i, (k, l, set()))[2].add(j)
 
+    def cantidad_de_ordenes_realizadas(self) -> int:
+        return len(self.ordenes_realizadas)
+
     def mostrar(self) -> None:
         print("Ordenes realizadas:", self.ordenes_realizadas)
 

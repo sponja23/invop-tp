@@ -1,12 +1,6 @@
 import argparse
 from pprint import pprint
 
-from src.generacion.distribuciones.multivariada import DistribucionIndependiente
-from src.generacion.distribuciones.univariada import (
-    DistribucionNormal,
-    DistribucionUniforme,
-)
-from src.generacion.generador import GeneradorInstancias
 from src.instancia import InstanciaAsignacionCuadrillas
 from src.modelo import ModeloAsignacionCuadrillas
 from src.modelo.modelo import ConfiguracionAsignacionCuadrillas
@@ -65,16 +59,10 @@ estrategia_repeticiones = {
 }[args.repeticiones]
 
 
-# instancia = InstanciaAsignacionCuadrillas.leer_instancia(args.instancia)
-instancia = GeneradorInstancias(
-    cantidad_trabajadores=DistribucionUniforme(10, 15),
-    cantidad_ordenes=DistribucionUniforme(20, 30),
-    parametros_ordenes=DistribucionIndependiente(
-        DistribucionNormal(10000, 2000), DistribucionUniforme(4, 10)
-    ),
-).generar_instancia()
+instancia = InstanciaAsignacionCuadrillas.leer_texto(args.instancia)
 
 pprint(instancia)
+print("Cota superior:", instancia.beneficio_maximo_pagando_minimo())
 
 
 modelo = ModeloAsignacionCuadrillas(

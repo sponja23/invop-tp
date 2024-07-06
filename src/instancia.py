@@ -51,6 +51,22 @@ class InstanciaAsignacionCuadrillas:
         """Índices sobre el conjunto de turnos de la instancia"""
         return range(1, 6)
 
+    def beneficio_maximo(self) -> float:
+        """Calcula el beneficio máximo posible de la instancia"""
+        return sum(orden.beneficio for orden in self.ordenes if orden.beneficio > 0)
+
+    def beneficio_maximo_pagando_minimo(self) -> float:
+        """Calcula el beneficio máximo posible de la instancia pagando el mínimo"""
+        return sum(
+            max(orden.beneficio - 1000 * orden.cant_trab, 0) for orden in self.ordenes
+        )
+
+    def cantidad_de_ordenes_posibles(self) -> int:
+        """Calcula la cantidad de órdenes posibles de asignar"""
+        return sum(
+            1 for orden in self.ordenes if orden.cant_trab <= self.cantidad_trabajadores
+        )
+
     @staticmethod
     def leer_texto(path: str) -> "InstanciaAsignacionCuadrillas":
         """
