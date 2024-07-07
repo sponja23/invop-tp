@@ -1,3 +1,4 @@
+from itertools import product
 import random
 from dataclasses import dataclass
 from typing import List, Tuple, Union
@@ -7,13 +8,26 @@ from .distribuciones.multivariada import DistribucionBivariada
 from .distribuciones.univariada import Distribucion, DistribucionConstante
 
 
-def generar_pares(n: int, cantidad: int) -> List[Tuple[int, int]]:
+def generar_pares_ordenados(n: int, cantidad: int) -> List[Tuple[int, int]]:
     """
-    Genera `cantidad` pares de números entre 0 y `n`
+    Genera `cantidad` pares ordenados de números entre 0 y `n`
     """
-    return [
-        (random.randint(0, n - 1), random.randint(0, n - 1)) for _ in range(cantidad)
-    ]
+    cantidad = min(cantidad, n * (n - 1))
+
+    todos = [(i, j) for i, j in product(range(n), repeat=2) if i != j]
+
+    return random.sample(todos, cantidad)
+
+
+def generar_pares_no_ordenados(n: int, cantidad: int) -> List[Tuple[int, int]]:
+    """
+    Genera `cantidad` pares no ordenados de números entre 0 y `n`
+    """
+    cantidad = min(cantidad, n * (n - 1) // 2)
+
+    todos = [(i, j) for i in range(n) for j in range(i + 1, n)]
+
+    return random.sample(todos, cantidad)
 
 
 @dataclass
@@ -50,22 +64,22 @@ class GeneradorInstancias:
                 Orden(id=i, beneficio=beneficio, cant_trab=max(1, round(cant_trab)))
             )
 
-        conflictos_trabajadores = generar_pares(
+        conflictos_trabajadores = generar_pares_no_ordenados(
             cantidad_trabajadores,
             max(0, self.cantidad_conflictos_trabajadores.muestrear()),
         )
 
-        ordenes_correlativas = generar_pares(
+        ordenes_correlativas = generar_pares_ordenados(
             cantidad_ordenes,
             max(0, self.cantidad_ordenes_correlativas.muestrear()),
         )
 
-        ordenes_conflictivas = generar_pares(
+        ordenes_conflictivas = generar_pares_no_ordenados(
             cantidad_ordenes,
             max(0, self.cantidad_ordenes_conflictivas.muestrear()),
         )
 
-        ordenes_repetitivas = generar_pares(
+        ordenes_repetitivas = generar_pares_no_ordenados(
             cantidad_ordenes,
             max(0, self.cantidad_ordenes_repetitivas.muestrear()),
         )
@@ -73,7 +87,8 @@ class GeneradorInstancias:
         return InstanciaAsignacionCuadrillas(
             cantidad_trabajadores=cantidad_trabajadores,
             ordenes=ordenes,
-            # Evitamos repetidos
+            # Evitamos repetidos: esto cambia un poco la distribución de la cantidad de conflictos
+            # pero no debería ser un problema
             conflictos_trabajadores=list(set(conflictos_trabajadores)),
             ordenes_correlativas=list(set(ordenes_correlativas)),
             ordenes_conflictivas=list(set(ordenes_conflictivas)),
