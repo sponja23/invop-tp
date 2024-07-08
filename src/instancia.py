@@ -1,5 +1,7 @@
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import Iterable, List, Tuple
+
+import networkx as nx
 
 
 @dataclass
@@ -55,10 +57,63 @@ class InstanciaAsignacionCuadrillas:
         """Calcula el beneficio máximo posible de la instancia"""
         return sum(orden.beneficio for orden in self.ordenes if orden.beneficio > 0)
 
-    def beneficio_maximo_pagando_minimo(self) -> float:
+    def bmp(self) -> float:
         """Calcula el beneficio máximo posible de la instancia pagando el mínimo"""
         return sum(
             max(orden.beneficio - 1000 * orden.cant_trab, 0) for orden in self.ordenes
+        )
+
+    def bmp_realizables(self) -> float:
+        """
+        Calcula el beneficio máximo posible de la instancia pagando el mínimo,
+        solo considerando las órdenes que pueden ser realizadas.
+        """
+        return sum(
+            max(orden.beneficio - 1000 * orden.cant_trab, 0)
+            for orden in self.ordenes
+            if orden.cant_trab <= self.cantidad_trabajadores
+        )
+
+    def grafo_correlatividades(self) -> nx.DiGraph:
+        """Construye el grafo de correlatividades de la instancia"""
+        G = nx.DiGraph()
+        G.add_edges_from(self.ordenes_correlativas)
+        return G
+
+    def ordenes_sin_ciclo_correlatividades(self) -> Iterable[int]:
+        """
+        Calcula el conjunto de índices de órdenes que no pertenecen a un ciclo en el
+        grafo de correlatividades
+        """
+        G = self.grafo_correlatividades()
+
+        # Las órdenes que no pertenecen al grafo no están en ningún ciclo
+        yield from set(self.indices_ordenes) - set(G.nodes)
+
+        for componente in nx.strongly_connected_components(G):
+            # Si el componente tiene más de un nodo, los nodos pertenecen a un ciclo
+            if len(componente) == 1:
+                yield componente.pop()
+
+    def ordenes_en_ciclo_correlatividades(self) -> set[int]:
+        """
+        Calcula el conjunto de índices de órdenes que pertenecen a un ciclo en el
+        grafo de correlatividades
+        """
+        return set(self.indices_ordenes) - set(
+            self.ordenes_sin_ciclo_correlatividades()
+        )
+
+    def bmp_realizables_sin_ciclo_correlatividades(self) -> float:
+        """
+        Calcula el beneficio máximo posible de la instancia pagando el mínimo,
+        solo considerando las órdenes que pueden ser realizadas y que no pertenecen
+        a un ciclo en el grafo de correlatividades.
+        """
+        return sum(
+            max(self.ordenes[i].beneficio - 1000 * self.ordenes[i].cant_trab, 0)
+            for i in self.ordenes_sin_ciclo_correlatividades()
+            if self.ordenes[i].cant_trab <= self.cantidad_trabajadores
         )
 
     def cantidad_de_ordenes_posibles(self) -> int:

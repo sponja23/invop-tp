@@ -62,7 +62,7 @@ estrategia_repeticiones = {
 instancia = InstanciaAsignacionCuadrillas.leer_texto(args.instancia)
 
 pprint(instancia)
-print("Cota superior:", instancia.beneficio_maximo_pagando_minimo())
+print("Cota superior:", instancia.bmp())
 
 
 modelo = ModeloAsignacionCuadrillas(
