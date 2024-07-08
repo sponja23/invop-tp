@@ -2,6 +2,7 @@ from collections.abc import Iterable
 from typing import Tuple, Union
 
 import matplotlib as mpl
+import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 
@@ -20,6 +21,44 @@ def histograma(
     fig, ax = plt.subplots(1, 1, figsize=figsize)
 
     sns.histplot(datos, bins=bins, ax=ax)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+
+    return fig
+
+
+def histograma_discreto(
+    datos: Iterable[int],
+    *,
+    xlabel: str,
+    figsize: Tuple[int, int] = (10, 5),
+    ylabel: str = "Cantidades",
+) -> mpl.figure.Figure:
+    counts = pd.Series(datos).value_counts().sort_index()
+
+    fig, ax = plt.subplots(1, 1, figsize=figsize)
+
+    sns.barplot(x=counts.index, y=counts.values, ax=ax)
+
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+
+    return fig
+
+
+def histograma_hue(
+    df: pd.DataFrame,
+    x: str,
+    hue: str,
+    *,
+    xlabel: str,
+    bins: int = 20,
+    figsize: Tuple[int, int] = (10, 5),
+    ylabel: str = "Frecuencia",
+) -> mpl.figure.Figure:
+    fig, ax = plt.subplots(1, 1, figsize=figsize)
+
+    sns.histplot(df, x=x, hue=hue, bins=bins, ax=ax)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
 
