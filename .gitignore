@@ -3,3 +3,6 @@ __pycache__/
 
 # Mypy cache
 .mypy_cache/
+
+# Notebook checkpoints
+**/.ipynb_checkpoints/
