@@ -45,18 +45,22 @@ from .variables import (
 
 @dataclass
 class ConfiguracionAsignacionCuadrillas:
-    estrategia_conflictos: EstrategiaConflictos
-    estrategia_repetitiva: EstrategiaRepeticiones
+    estrategia_conflictos: EstrategiaConflictos = IgnorarConflictos()
+    estrategia_repetitiva: EstrategiaRepeticiones = IgnorarRepeticiones()
+
+    @staticmethod
+    def default() -> "ConfiguracionAsignacionCuadrillas":
+        return ConfiguracionAsignacionCuadrillas(
+            estrategia_conflictos=IgnorarConflictos(),
+            estrategia_repetitiva=IgnorarRepeticiones(),
+        )
 
 
 class ModeloAsignacionCuadrillas:
     def __init__(
         self,
         instancia: InstanciaAsignacionCuadrillas,
-        configuracion: ConfiguracionAsignacionCuadrillas = ConfiguracionAsignacionCuadrillas(
-            estrategia_conflictos=IgnorarConflictos(),
-            estrategia_repetitiva=IgnorarRepeticiones(),
-        ),
+        configuracion: ConfiguracionAsignacionCuadrillas = ConfiguracionAsignacionCuadrillas.default(),
     ) -> None:
         self.instancia = instancia
 
