@@ -127,3 +127,9 @@ class Experimento:
             path.parent.mkdir(parents=True)
 
         fig.savefig(path)
+
+
+def cargar_resultados(nombre: str) -> ResultadosExperimento:
+    path_resultados = PATH_DATOS / nombre / "resultados.pkl"
+    with open(path_resultados, "rb") as f:
+        return pickle.load(f)
