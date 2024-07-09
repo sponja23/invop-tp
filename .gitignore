@@ -6,3 +6,6 @@ __pycache__/
 
 # Notebook checkpoints
 **/.ipynb_checkpoints/
+
+# Datos de Experimentos
+experimentos/datos/
