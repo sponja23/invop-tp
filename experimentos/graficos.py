@@ -83,7 +83,7 @@ def boxplot(
         ]
     )
 
-    sns.boxplot(data=df, x="label", y="value", ax=ax)
+    sns.boxplot(data=df, x="value", y="label",  ax=ax, )
 
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
