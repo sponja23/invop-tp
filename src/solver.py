@@ -50,11 +50,12 @@ class ConfiguracionCPLEX:
     heuristic_effort: float = 1.0
 
     planos_de_corte: PlanosDeCorte = PlanosDeCorte.AUTO
-    planos_de_corte_gomory: PlanosDeCorte = PlanosDeCorte.AUTO
-    planos_de_corte_bqp: PlanosDeCorte = PlanosDeCorte.AUTO
-    planos_de_corte_clique: PlanosDeCorte = PlanosDeCorte.AUTO
-    planos_de_corte_cover: PlanosDeCorte = PlanosDeCorte.AUTO
-    planos_de_corte_disjunctive: PlanosDeCorte = PlanosDeCorte.AUTO
+    gub: PlanosDeCorte = PlanosDeCorte.AUTO
+    gomory: PlanosDeCorte = PlanosDeCorte.AUTO
+    bqp: PlanosDeCorte = PlanosDeCorte.AUTO
+    clique: PlanosDeCorte = PlanosDeCorte.AUTO
+    cover: PlanosDeCorte = PlanosDeCorte.AUTO
+    disjunctive: PlanosDeCorte = PlanosDeCorte.AUTO
 
     def aplicar(self, cpx: cplex.Cplex) -> None:
         """Aplica la configuración al solver"""
@@ -66,11 +67,12 @@ class ConfiguracionCPLEX:
             cpx.set_results_stream(None)
 
         cpx.parameters.mip.cuts.nodecuts.set(self.planos_de_corte.value)
-        cpx.parameters.mip.cuts.gomory.set(self.planos_de_corte_gomory.value)
-        cpx.parameters.mip.cuts.bqp.set(self.planos_de_corte_bqp.value)
-        cpx.parameters.mip.cuts.cliques.set(self.planos_de_corte_clique.value)
-        cpx.parameters.mip.cuts.covers.set(self.planos_de_corte_cover.value)
-        cpx.parameters.mip.cuts.disjunctive.set(self.planos_de_corte_disjunctive.value)
+        cpx.parameters.mip.cuts.gubcovers.set(self.gub.value)
+        cpx.parameters.mip.cuts.gomory.set(self.gomory.value)
+        cpx.parameters.mip.cuts.bqp.set(self.bqp.value)
+        cpx.parameters.mip.cuts.cliques.set(self.clique.value)
+        cpx.parameters.mip.cuts.covers.set(self.cover.value)
+        cpx.parameters.mip.cuts.disjunctive.set(self.disjunctive.value)
 
         cpx.parameters.mip.strategy.nodeselect.set(self.estrategia_seleccion_nodo.value)
         cpx.parameters.mip.strategy.variableselect.set(
